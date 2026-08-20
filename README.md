@@ -5,6 +5,8 @@
 [![CI](https://github.com/loxsmoke/money-calendar/actions/workflows/ci.yml/badge.svg)](https://github.com/loxsmoke/money-calendar/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
+📥 **[Download the latest release](https://github.com/loxsmoke/money-calendar/releases/latest)** — installer or portable build.
+
 Money Calendar is a desktop app for planning your income and expenses on a calendar and seeing where your balance lands.
 
 Rather than recording what you already spent, you enter what you expect — a salary on the 15th, rent on the 1st, a subscription every two weeks, a one-off bill next month — and the app draws the weeks ahead: what comes in, what goes out, and what is left after each. Bills that repeat are entered once and keep appearing on their own.
