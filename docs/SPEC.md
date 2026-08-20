@@ -722,18 +722,32 @@ ever makes**, it carries nothing about the machine or the ledger, and
 | Workflow | Trigger | Does |
 |---|---|---|
 | `.github/workflows/ci.yml` | Push and PR against `main` | Restore, build and test in Release on `windows-latest` |
-| `.github/workflows/release.yml` | `workflow_dispatch` with a `version` input | Stamps the version, tests, publishes, tags and releases |
+| `.github/workflows/release.yml` | `workflow_dispatch` | Takes the next version from version.win, stamps it, tests, publishes, tags and releases |
 
-The release job validates the version (three numeric parts, optional pre-release suffix) and
-refuses a tag that already exists on the remote **before** building. It then stamps `Version`,
-`AssemblyVersion` and `FileVersion` into `MoneyCalendar.App.csproj` with `dotnet-property`, runs
-the tests against the stamped build, and publishes self-contained single-file for `win-x64`.
-Untrimmed, deliberately: Avalonia resolves views and converters reflectively.
+The release workflow is the same one the other desktop apps in this family use, with the same two
+inputs:
 
-The commit, the tag and the GitHub Release happen **only after the build succeeds**, so a failed
-release leaves no version bump behind. A version with a pre-release suffix is marked as a
-pre-release on GitHub. The one attached asset is
-`MoneyCalendar-<version>-win-x64-portable.zip` — the name the update check looks for (§10.3).
+| Input | Required | Meaning |
+|---|---|---|
+| `increment` | yes, default `az` | version.win increment (semantic.3): `azz` = 1.0.0, `az` = 0.1.0, `a` = 0.0.1 |
+| `postfix` | no | `rc`, `beta`, … — makes a pre-release version *and* marks the GitHub Release as a pre-release |
+
+**Versions come from version.win, not from a hand-typed number.** The job calls `/dryrun` first,
+which computes the next version without consuming it, and only calls `/new` to reserve it once the
+build and tests have passed — so a failed release never burns a version number. Between the two it
+checks that version.win issued the same number the build was stamped with, which catches a
+concurrent release. Both calls need the `VERSION_WIN_API_KEY` and `VERSION_WIN_PROJECT_ID` repo
+secrets.
+
+The version is stamped into `MoneyCalendar.App.csproj` with `dotnet-property` — `Version` gets the
+full string, `AssemblyVersion` and `FileVersion` get it with any postfix stripped and a fourth
+part appended, which is what keeps the title bar and the update check numeric (§10.3). The publish
+is self-contained single-file for `win-x64`, untrimmed, deliberately: Avalonia resolves views and
+converters reflectively.
+
+The commit, the tag and the GitHub Release happen **only after the build succeeds**. The one
+attached asset is `MoneyCalendar-<version>-win-x64-portable.zip` — the name the update check looks
+for (§10.3). Unlike its siblings there is no Inno Setup installer, because this repo has no `.iss`.
 
 Windows runners for both: the app is a `WinExe` with a Windows application manifest, and the
 headless UI tests render through SkiaSharp against the same stack users run.

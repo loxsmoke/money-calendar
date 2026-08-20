@@ -1,17 +1,21 @@
 name: Release
 
-# Manually triggered. Stamps the given version into MoneyCalendar.App, runs the tests,
-# publishes a self-contained single-file build, and only once that succeeds commits the
-# version bump, tags it, and publishes a GitHub Release with a portable zip attached.
-#
-# The zip is named MoneyCalendar-<version>-win-x64-portable.zip because that is the asset
-# the in-app update check looks for — see UpdateCheck.PortableAssetName.
+# Manually triggered. Computes the next version from version.win (dry run),
+# stamps it into MoneyCalendar, builds a Windows release, then only after the
+# build succeeds reserves the version on version.win, commits and tags the
+# bump, and publishes a GitHub Release with a portable zip attached. The dry
+# run means a failed build does not burn a version number.
 on:
   workflow_dispatch:
     inputs:
-      version:
-        description: 'Version to release, three numeric parts, optionally with a pre-release suffix (1.2.0 or 1.2.0-rc1)'
+      increment:
+        description: increment settings (semantic.3) 1.0.0=azz 0.1.0=az 0.0.1=a
         required: true
+        default: az
+        type: string
+      postfix:
+        description: postfix like rc or beta for a pre-release version (also marks the release as pre-release)
+        required: false
         type: string
 
 permissions:
@@ -19,6 +23,7 @@ permissions:
 
 jobs:
   release:
+    # Windows runner because this workflow publishes a Windows desktop build.
     runs-on: windows-latest
 
     env:
@@ -43,30 +48,43 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
-      - name: Validate version
+      - name: Compute version from version.win (dry run)
         id: version
         shell: bash
         env:
-          VERSION: ${{ inputs.version }}
+          INCREMENT: ${{ inputs.increment }}
+          POSTFIX: ${{ inputs.postfix }}
+          VERSION_WIN_API_KEY: ${{ secrets.VERSION_WIN_API_KEY }}
+          VERSION_WIN_PROJECT_ID: ${{ secrets.VERSION_WIN_PROJECT_ID }}
         run: |
-          # The title bar and the update check both compare three numeric parts, so the
-          # assembly version is the version with any pre-release suffix stripped.
-          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
-            echo "::error::'$VERSION' is not a three-part version, optionally with a pre-release suffix" >&2
+          # /dryrun computes the next version without consuming it, so a build
+          # failure later does not burn a version number.
+          VERSION_URL="https://api.version.win/v/${VERSION_WIN_PROJECT_ID}/dryrun?key=${VERSION_WIN_API_KEY}&increment=${INCREMENT}"
+
+          if [ -n "$POSTFIX" ]; then
+            VERSION_URL="${VERSION_URL}&postfix=${POSTFIX}"
+          fi
+
+          if ! VERSION=$(curl -sf "$VERSION_URL"); then
+            echo "::error::Failed to fetch version from version.win" >&2
             exit 1
           fi
 
-          TAG="v$VERSION"
-          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null; then
-            echo "::error::Tag '$TAG' already exists on origin" >&2
-            exit 1
-          fi
-
+          # Strip any pre-release postfix (e.g. -rc1) for the numeric assembly version.
           BASE_VERSION="${VERSION%%-*}"
+          if [[ "$BASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            ASSEMBLY_VERSION="${BASE_VERSION}.0"
+          elif [[ "$BASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            ASSEMBLY_VERSION="$BASE_VERSION"
+          else
+            echo "::error::Version '$VERSION' does not start with a three-part or four-part numeric version" >&2
+            exit 1
+          fi
+
           echo "project=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "assembly=${BASE_VERSION}.0" >> "$GITHUB_OUTPUT"
-          echo "prerelease=$([[ "$VERSION" == *-* ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
-          echo "Releasing $VERSION (assembly ${BASE_VERSION}.0)"
+          echo "assembly=$ASSEMBLY_VERSION" >> "$GITHUB_OUTPUT"
+          echo "Project version: $VERSION"
+          echo "Assembly and file version: $ASSEMBLY_VERSION"
 
       - name: Install dotnet-property
         run: dotnet tool install --global dotnet-property
@@ -77,8 +95,8 @@ jobs:
           PROJECT_VERSION: ${{ steps.version.outputs.project }}
           ASSEMBLY_VERSION: ${{ steps.version.outputs.assembly }}
         run: |
-          # dotnet-property matches a relative glob, so run it from the project's own
-          # directory with a bare filename.
+          # dotnet-property matches a relative glob, so run it from the
+          # project's own directory with a bare filename.
           ( cd src/MoneyCalendar.App && \
             dotnet-property MoneyCalendar.App.csproj "Version:$PROJECT_VERSION" && \
             dotnet-property MoneyCalendar.App.csproj "AssemblyVersion:$ASSEMBLY_VERSION" && \
@@ -87,8 +105,8 @@ jobs:
       - name: Test
         run: dotnet test MoneyCalendar.slnx --configuration Release --verbosity normal
 
-      # Self-contained so end users do not need the .NET runtime installed. Untrimmed:
-      # Avalonia resolves views and converters reflectively, and trimming breaks that.
+      # Self-contained so end users do not need the .NET runtime installed.
+      # Untrimmed: Avalonia resolves views and converters reflectively.
       - name: Publish
         run: >
           dotnet publish src/MoneyCalendar.App/MoneyCalendar.App.csproj
@@ -103,6 +121,8 @@ jobs:
         shell: bash
         run: find "${{ env.PUBLISH_DIR }}" -name '*.pdb' -delete
 
+      # This name is what the in-app update check looks for: see
+      # UpdateCheck.PortableAssetName, which a test pins to the same string.
       - name: Package portable zip
         shell: pwsh
         run: |
@@ -110,12 +130,48 @@ jobs:
           Compress-Archive -Path "${{ env.PUBLISH_DIR }}/*" `
             -DestinationPath "artifacts/MoneyCalendar-${{ steps.version.outputs.project }}-${{ env.RID }}-portable.zip"
 
+      # Build succeeded, so now actually consume the version on version.win.
+      - name: Reserve version on version.win
+        shell: bash
+        env:
+          INCREMENT: ${{ inputs.increment }}
+          POSTFIX: ${{ inputs.postfix }}
+          EXPECTED: ${{ steps.version.outputs.project }}
+          VERSION_WIN_API_KEY: ${{ secrets.VERSION_WIN_API_KEY }}
+          VERSION_WIN_PROJECT_ID: ${{ secrets.VERSION_WIN_PROJECT_ID }}
+        run: |
+          VERSION_URL="https://api.version.win/v/${VERSION_WIN_PROJECT_ID}/new?key=${VERSION_WIN_API_KEY}&increment=${INCREMENT}"
+
+          if [ -n "$POSTFIX" ]; then
+            VERSION_URL="${VERSION_URL}&postfix=${POSTFIX}"
+          fi
+
+          if ! VERSION=$(curl -sf "$VERSION_URL"); then
+            echo "::error::Failed to reserve version on version.win" >&2
+            exit 1
+          fi
+
+          # Guard against a concurrent release consuming the number between the
+          # dry run and now, because the build was stamped with EXPECTED.
+          if [ "$VERSION" != "$EXPECTED" ]; then
+            echo "::error::version.win issued '$VERSION' but the build used '$EXPECTED' (concurrent release?)" >&2
+            exit 1
+          fi
+          echo "Reserved version $VERSION"
+
       - name: Commit and tag version
         shell: bash
         env:
           PROJECT_VERSION: ${{ steps.version.outputs.project }}
           TARGET_BRANCH: ${{ github.ref_name }}
         run: |
+          TAG="v$PROJECT_VERSION"
+
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null; then
+            echo "::error::Tag '$TAG' already exists on origin" >&2
+            exit 1
+          fi
+
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add src/MoneyCalendar.App/MoneyCalendar.App.csproj
@@ -126,15 +182,15 @@ jobs:
           fi
 
           git commit -m "Set version $PROJECT_VERSION"
-          git tag "v$PROJECT_VERSION"
-          git push --atomic origin "HEAD:$TARGET_BRANCH" "refs/tags/v$PROJECT_VERSION"
+          git tag "$TAG"
+          git push --atomic origin "HEAD:$TARGET_BRANCH" "refs/tags/$TAG"
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v3
         with:
           tag_name: v${{ steps.version.outputs.project }}
           name: Money Calendar v${{ steps.version.outputs.project }}
-          prerelease: ${{ steps.version.outputs.prerelease }}
+          prerelease: ${{ inputs.postfix != '' }}
           generate_release_notes: true
           files: |
             artifacts/MoneyCalendar-${{ steps.version.outputs.project }}-${{ env.RID }}-portable.zip
