@@ -5,9 +5,9 @@
          MoneyCalendar, matching the other two projects in the solution. -->
     <AssemblyName>MoneyCalendar</AssemblyName>
     <RootNamespace>MoneyCalendar</RootNamespace>
-    <Version>0.1.0</Version>
-    <AssemblyVersion>0.1.0.0</AssemblyVersion>
-    <FileVersion>0.1.0.0</FileVersion>
+    <Version>0.2.0</Version>
+    <AssemblyVersion>0.2.0.0</AssemblyVersion>
+    <FileVersion>0.2.0.0</FileVersion>
     <Product>Money Calendar</Product>
     <Company>LoxSmoke</Company>
     <ApplicationManifest>app.manifest</ApplicationManifest>
