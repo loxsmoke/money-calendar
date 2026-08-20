@@ -46,7 +46,7 @@ The interface is built with Avalonia, so nothing about it is Windows-bound in pr
 ## Getting started
 
 ```
-dotnet run --project src/MoneyCalendar.App
+dotnet run --project src/MoneyCalendar
 dotnet test MoneyCalendar.slnx
 ```
 
@@ -68,7 +68,7 @@ The first launch opens on an empty ledger — no invented accounts, no invented 
 
 **Settings** — the theme, your categories, a count of what the app is holding, and export and import. Two delete buttons live here, both red and both asking you to type the word first: one clears the transactions, the other clears the accounts too.
 
-**About** — which build is running, links to this repository, a check for newer releases (switch it off and the app makes no network requests at all), and a system-info table with a copy button for filing bug reports.
+**About** — which build is running, links to this repository, and a check for newer releases: if you installed with the installer it can fetch and apply the update in place, otherwise it saves it to your Downloads folder. Switch the check off and the app makes no network requests at all. There is also a system-info table with a copy button for filing bug reports.
 
 ---
 
@@ -97,7 +97,7 @@ money-calendar/
 ├── src/
 │   ├── MoneyCalendar.Core/      Entities, summary aggregation, export/import, seed data
 │   ├── MoneyCalendar.Data/      EF Core + SQLite: context, repositories, bootstrap
-│   └── MoneyCalendar.App/       Avalonia UI: shell, six sections, dialogs, themes
+│   └── MoneyCalendar/           Avalonia UI: shell, six sections, dialogs, themes
 ├── tests/MoneyCalendar.Tests/   xUnit: repositories, summaries, export/import, headless UI
 └── tools/make-icon.py           Redraws the app icon (a calendar with dollar-sign days)
 ```
@@ -134,7 +134,9 @@ These are deliberate simplifications, not oversights:
 The version itself comes from version.win, which needs the `VERSION_WIN_API_KEY` and
 `VERSION_WIN_PROJECT_ID` repo secrets. The number is computed with a dry run, stamped into the
 project, and only reserved for real once the build and tests pass — so a failed release never
-burns a version. The commit, tag and GitHub Release come last, with the portable zip attached.
+burns a version. The commit, tag and GitHub Release come last, with two assets attached: a Windows
+installer (`MoneyCalendar-<version>-setup.exe`, built from `build/MoneyCalendar.iss`) and a
+portable zip for anyone who would rather not install.
 
 ---
 

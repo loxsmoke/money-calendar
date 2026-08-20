@@ -1,6 +1,6 @@
 <Solution>
   <Folder Name="/src/">
-    <Project Path="src/MoneyCalendar.App/MoneyCalendar.App.csproj" />
+    <Project Path="src/MoneyCalendar/MoneyCalendar.csproj" />
     <Project Path="src/MoneyCalendar.Core/MoneyCalendar.Core.csproj" />
     <Project Path="src/MoneyCalendar.Data/MoneyCalendar.Data.csproj" />
   </Folder>

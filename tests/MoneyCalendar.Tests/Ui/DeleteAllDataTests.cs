@@ -1,8 +1,8 @@
 using Avalonia.Controls;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
-using MoneyCalendar.App.ViewModels;
-using MoneyCalendar.App.Views;
+using MoneyCalendar.ViewModels;
+using MoneyCalendar.Views;
 using MoneyCalendar.Core.Abstractions;
 
 namespace MoneyCalendar.Tests.Ui;

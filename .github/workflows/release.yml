@@ -1,10 +1,11 @@
 name: Release
 
 # Manually triggered. Computes the next version from version.win (dry run),
-# stamps it into MoneyCalendar, builds a Windows release, then only after the
-# build succeeds reserves the version on version.win, commits and tags the
-# bump, and publishes a GitHub Release with a portable zip attached. The dry
-# run means a failed build does not burn a version number.
+# stamps it into MoneyCalendar, builds an installable Windows release, then only
+# after the build succeeds reserves the version on version.win, commits and
+# tags the bump, and publishes a GitHub Release with the installer and a
+# portable zip attached. The dry run means a failed build does not burn a
+# version number.
 on:
   workflow_dispatch:
     inputs:
@@ -97,10 +98,10 @@ jobs:
         run: |
           # dotnet-property matches a relative glob, so run it from the
           # project's own directory with a bare filename.
-          ( cd src/MoneyCalendar.App && \
-            dotnet-property MoneyCalendar.App.csproj "Version:$PROJECT_VERSION" && \
-            dotnet-property MoneyCalendar.App.csproj "AssemblyVersion:$ASSEMBLY_VERSION" && \
-            dotnet-property MoneyCalendar.App.csproj "FileVersion:$ASSEMBLY_VERSION" )
+          ( cd src/MoneyCalendar && \
+            dotnet-property MoneyCalendar.csproj "Version:$PROJECT_VERSION" && \
+            dotnet-property MoneyCalendar.csproj "AssemblyVersion:$ASSEMBLY_VERSION" && \
+            dotnet-property MoneyCalendar.csproj "FileVersion:$ASSEMBLY_VERSION" )
 
       - name: Test
         run: dotnet test MoneyCalendar.slnx --configuration Release --verbosity normal
@@ -109,7 +110,7 @@ jobs:
       # Untrimmed: Avalonia resolves views and converters reflectively.
       - name: Publish
         run: >
-          dotnet publish src/MoneyCalendar.App/MoneyCalendar.App.csproj
+          dotnet publish src/MoneyCalendar/MoneyCalendar.csproj
           --configuration Release
           --runtime ${{ env.RID }}
           --self-contained true
@@ -121,14 +122,27 @@ jobs:
         shell: bash
         run: find "${{ env.PUBLISH_DIR }}" -name '*.pdb' -delete
 
-      # This name is what the in-app update check looks for: see
-      # UpdateCheck.PortableAssetName, which a test pins to the same string.
+      # These names are what the in-app update check looks for: see
+      # UpdateCheck.SetupAssetName and PortableAssetName, which tests pin to the
+      # same strings.
       - name: Package portable zip
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path artifacts | Out-Null
           Compress-Archive -Path "${{ env.PUBLISH_DIR }}/*" `
             -DestinationPath "artifacts/MoneyCalendar-${{ steps.version.outputs.project }}-${{ env.RID }}-portable.zip"
+
+      # Inno Setup ships preinstalled on the windows-latest runner image.
+      - name: Build installer
+        shell: pwsh
+        run: |
+          $publish = (Resolve-Path "${{ env.PUBLISH_DIR }}").Path
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" `
+            "/DAppVersion=${{ steps.version.outputs.project }}" `
+            "/DSourceDir=$publish" `
+            "/DAppUrl=https://github.com/${{ github.repository }}" `
+            build/MoneyCalendar.iss
+          Copy-Item "build/installer/MoneyCalendar-${{ steps.version.outputs.project }}-setup.exe" -Destination artifacts/
 
       # Build succeeded, so now actually consume the version on version.win.
       - name: Reserve version on version.win
@@ -174,7 +188,7 @@ jobs:
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/MoneyCalendar.App/MoneyCalendar.App.csproj
+          git add src/MoneyCalendar/MoneyCalendar.csproj
 
           if git diff --cached --quiet; then
             echo "::error::Version update did not change the project file" >&2
@@ -193,4 +207,5 @@ jobs:
           prerelease: ${{ inputs.postfix != '' }}
           generate_release_notes: true
           files: |
+            artifacts/MoneyCalendar-${{ steps.version.outputs.project }}-setup.exe
             artifacts/MoneyCalendar-${{ steps.version.outputs.project }}-${{ env.RID }}-portable.zip

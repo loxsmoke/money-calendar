@@ -69,16 +69,16 @@ declares `x:DataType` and binding errors surface at build time rather than at ru
 Three projects, dependencies pointing inward:
 
 ```
-MoneyCalendar.App  ──►  MoneyCalendar.Data  ──►  MoneyCalendar.Core
-       │                                              ▲
-       └──────────────────────────────────────────────┘
+MoneyCalendar  ──►  MoneyCalendar.Data  ──►  MoneyCalendar.Core
+       │                                          ▲
+       └──────────────────────────────────────────┘
 ```
 
 | Project | Contains |
 |---|---|
 | `MoneyCalendar.Core` | Entities, enums, repository and service abstractions, all calculation services (`SummaryService`, `EntryQueryService`, `RecurrenceExpander`, `RangePolicy`, `DataTransferService`), seed data. No UI and no EF Core. |
 | `MoneyCalendar.Data` | `MoneyCalendarDbContext`, the three repositories, `DatabaseBootstrapper`, `DatabaseCatalog`, DI registration. Implements Core's abstractions. |
-| `MoneyCalendar.App` | Avalonia shell, six page view models, dialogs, themes, formatting helpers, settings store. |
+| `MoneyCalendar`      | Avalonia shell, six page view models, dialogs, themes, formatting helpers, settings store. |
 
 ### Composition
 
@@ -711,8 +711,21 @@ ever makes**, it carries nothing about the machine or the ledger, and
   newer, and otherwise reports the version, publish date, and the portable zip's URL and size.
   Every failure — offline, rate-limited, malformed — returns `null` and is logged at debug. An app
   that cannot reach GitHub is not a broken app.
-- The asset it looks for is `UpdateCheck.PortableAssetName(version)`, which has to match the name
-  the release workflow attaches. A test pins the string on the app's side.
+- The asset it looks for is `UpdateCheck.SetupAssetName(version)` — the installer. The portable
+  zip is attached to the release too, but the app never reaches for it; it is there for people
+  browsing the releases page. Tests pin both strings on the app's side.
+- `UpdateInstaller` is the third piece, and it is the same implementation the sibling apps use:
+  **Install update** downloads the installer to a staging folder under local app-data and runs it
+  `/SILENT /NORESTART /RELAUNCH`, then the app closes — setup cannot overwrite a running exe, and
+  `/RELAUNCH` (handled in the `.iss`) starts the new build afterwards. **Download** saves the same
+  installer to the Downloads folder and reveals it in Explorer.
+- **Install update only appears when this build is the one setup installed.** `IsInstalledBySetup`
+  compares `AppContext.BaseDirectory` against the `InstallLocation` recorded under the Inno
+  uninstall key. A portable copy gets the download instead: running the installer from one would
+  update a different install and leave the running copy untouched.
+- There is no signature or hash to verify against, so integrity rests on two checks: the URL must
+  be **https on a GitHub-owned host** (matched on a label boundary, so `notgithub.com` fails), and
+  the bytes received must match the size the API reported.
 - About checks quietly on arrival (saying nothing unless there is something newer) and **Check
   now** announces either way. Nothing is downloaded or installed: **Download** opens the zip's URL
   in a browser, because a portable release is something the user unpacks where they want it.
@@ -739,15 +752,25 @@ checks that version.win issued the same number the build was stamped with, which
 concurrent release. Both calls need the `VERSION_WIN_API_KEY` and `VERSION_WIN_PROJECT_ID` repo
 secrets.
 
-The version is stamped into `MoneyCalendar.App.csproj` with `dotnet-property` — `Version` gets the
+The version is stamped into `MoneyCalendar.csproj` with `dotnet-property` — `Version` gets the
 full string, `AssemblyVersion` and `FileVersion` get it with any postfix stripped and a fourth
 part appended, which is what keeps the title bar and the update check numeric (§10.3). The publish
 is self-contained single-file for `win-x64`, untrimmed, deliberately: Avalonia resolves views and
 converters reflectively.
 
-The commit, the tag and the GitHub Release happen **only after the build succeeds**. The one
-attached asset is `MoneyCalendar-<version>-win-x64-portable.zip` — the name the update check looks
-for (§10.3). Unlike its siblings there is no Inno Setup installer, because this repo has no `.iss`.
+The commit, the tag and the GitHub Release happen **only after the build succeeds**. Two assets are
+attached, both named exactly as the update check expects (§10.3):
+
+| Asset | Built by |
+|---|---|
+| `MoneyCalendar-<version>-setup.exe` | `build/MoneyCalendar.iss` compiled with ISCC, which ships preinstalled on the `windows-latest` image |
+| `MoneyCalendar-<version>-win-x64-portable.zip` | `Compress-Archive` over the publish output |
+
+The installer takes its version, source directory and repository URL from the workflow as `/D`
+defines, so nothing in the `.iss` needs editing at release time. `AppId` is a fixed GUID, which is
+what makes an install an *upgrade* of the previous one rather than a second copy beside it — never
+change it. It installs into `{autopf}\MoneyCalendar`, offers an optional desktop icon, and
+supports a `/RELAUNCH` switch so a silent update can restart the app afterwards.
 
 Windows runners for both: the app is a `WinExe` with a Windows application manifest, and the
 headless UI tests render through SkiaSharp against the same stack users run.

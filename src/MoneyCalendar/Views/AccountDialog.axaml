@@ -1,0 +1,44 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:MoneyCalendar.ViewModels"
+        x:Class="MoneyCalendar.Views.AccountDialog"
+        x:DataType="vm:AccountEditorViewModel"
+        Title="{Binding Title}"
+        Width="420" SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False">
+
+    <StackPanel Margin="20" Spacing="12">
+        <TextBlock Text="{Binding Title}" Classes="h2"/>
+
+        <StackPanel Spacing="4">
+            <TextBlock Text="Name" Classes="subtle small"/>
+            <TextBox Text="{Binding Name}" PlaceholderText="Everyday Checking"/>
+        </StackPanel>
+
+        <StackPanel Spacing="4">
+            <TextBlock Text="Type" Classes="subtle small"/>
+            <ComboBox ItemsSource="{Binding Types}" SelectedItem="{Binding SelectedType}"
+                      HorizontalAlignment="Stretch"/>
+        </StackPanel>
+
+        <StackPanel Spacing="4">
+            <TextBlock Text="Last digits (optional)" Classes="subtle small"/>
+            <TextBox Text="{Binding Last4}" MaxLength="4" PlaceholderText="4417" Width="120"
+                     HorizontalAlignment="Left"/>
+        </StackPanel>
+
+        <StackPanel Spacing="4">
+            <TextBlock Text="Note" Classes="subtle small"/>
+            <TextBox Text="{Binding Note}" PlaceholderText="Optional" AcceptsReturn="True" MinHeight="52"/>
+        </StackPanel>
+
+        <TextBlock Text="{Binding ErrorText}" Classes="error small" TextWrapping="Wrap"
+                   IsVisible="{Binding ErrorText, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+
+        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+            <Button Content="Cancel" Click="OnCancelClick"/>
+            <Button Content="Save" Classes="accent" Click="OnSaveClick" IsDefault="True"/>
+        </StackPanel>
+    </StackPanel>
+</Window>

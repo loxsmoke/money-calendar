@@ -1,4 +1,4 @@
-using MoneyCalendar.App.Services;
+using MoneyCalendar.Services;
 
 namespace MoneyCalendar.Tests.Services;
 
@@ -64,11 +64,57 @@ public class UpdateCheckTests
     }
 
     [Fact]
-    public void The_asset_name_is_the_one_the_release_workflow_attaches()
+    public void The_asset_names_are_the_ones_the_release_workflow_attaches()
     {
-        // Kept in step with the Compress-Archive step in .github/workflows/release.yml; if one
-        // moves without the other, the Download button silently disappears.
+        // Kept in step with .github/workflows/release.yml: the installer name comes from
+        // OutputBaseFilename in build/MoneyCalendar.iss, the zip from the Compress-Archive
+        // step. If either moves without this, the Download button silently disappears.
+        Assert.Equal("MoneyCalendar-1.2.0-setup.exe", UpdateCheck.SetupAssetName("1.2.0"));
         Assert.Equal("MoneyCalendar-1.2.0-win-x64-portable.zip", UpdateCheck.PortableAssetName("1.2.0"));
+    }
+
+    [Theory]
+    // Where a release asset is actually served from, both directly and after GitHub redirects.
+    [InlineData("https://github.com/loxsmoke/money-calendar/releases/download/v1.2.0/MoneyCalendar-1.2.0-setup.exe", true)]
+    [InlineData("https://objects.githubusercontent.com/github-production-release-asset/file.exe", true)]
+    // Plain http, and hosts that merely end in the right letters.
+    [InlineData("http://github.com/loxsmoke/money-calendar/releases/download/v1.2.0/MoneyCalendar-1.2.0-setup.exe", false)]
+    [InlineData("https://example.com/MoneyCalendar-1.2.0-setup.exe", false)]
+    [InlineData("https://notgithub.com/MoneyCalendar-1.2.0-setup.exe", false)]
+    [InlineData(null, false)]
+    public void Only_https_urls_on_a_github_host_are_downloaded(string? url, bool expected)
+    {
+        // There is no signature or hash to check, so where the file comes from is the guard.
+        Assert.Equal(expected, UpdateInstaller.IsTrustedUrl(url));
+    }
+
+    [Fact]
+    public void A_second_download_does_not_overwrite_the_first()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "mc-update-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            var first = UpdateInstaller.UniquePath(directory, "MoneyCalendar-1.2.0-setup.exe");
+            Assert.Equal(Path.Combine(directory, "MoneyCalendar-1.2.0-setup.exe"), first);
+
+            File.WriteAllText(first, "");
+            Assert.Equal(
+                Path.Combine(directory, "MoneyCalendar-1.2.0-setup (2).exe"),
+                UpdateInstaller.UniquePath(directory, "MoneyCalendar-1.2.0-setup.exe"));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void The_staging_folder_is_not_the_folder_the_ledger_lives_in()
+    {
+        // An installer waiting to run has no business sitting beside the database.
+        Assert.EndsWith(Path.Combine("MoneyCalendar", "update"), UpdateInstaller.UpdateStagingDir(), StringComparison.Ordinal);
+        Assert.NotEqual(MoneyCalendar.Bootstrap.AppDataPaths.Root, UpdateInstaller.UpdateStagingDir());
     }
 
     [Fact]

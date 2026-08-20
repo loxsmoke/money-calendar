@@ -1,6 +1,6 @@
-using MoneyCalendar.App.Services;
-using MoneyCalendar.App.ViewModels;
-using MoneyCalendar.App.Views;
+using MoneyCalendar.Services;
+using MoneyCalendar.ViewModels;
+using MoneyCalendar.Views;
 using MoneyCalendar.Core.Abstractions;
 using MoneyCalendar.Core.Entities;
 using MoneyCalendar.Core.Seed;

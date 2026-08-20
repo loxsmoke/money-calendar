@@ -1,10 +1,10 @@
 using Avalonia;
 using Avalonia.Headless;
 using Microsoft.Extensions.DependencyInjection;
-using MoneyCalendar.App.Bootstrap;
-using MoneyCalendar.App.Services;
+using MoneyCalendar.Bootstrap;
+using MoneyCalendar.Services;
 using MoneyCalendar.Data;
-using MoneyCalendarApp = MoneyCalendar.App.App;
+using MoneyCalendarApp = MoneyCalendar.App;
 
 namespace MoneyCalendar.Tests.Ui;
 

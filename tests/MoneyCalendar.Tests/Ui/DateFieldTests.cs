@@ -1,5 +1,5 @@
 using Avalonia.Controls;
-using MoneyCalendar.App.Controls;
+using MoneyCalendar.Controls;
 
 namespace MoneyCalendar.Tests.Ui;
 

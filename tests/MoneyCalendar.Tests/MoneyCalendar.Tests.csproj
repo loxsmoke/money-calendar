@@ -18,7 +18,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\MoneyCalendar.Core\MoneyCalendar.Core.csproj" />
     <ProjectReference Include="..\..\src\MoneyCalendar.Data\MoneyCalendar.Data.csproj" />
-    <ProjectReference Include="..\..\src\MoneyCalendar.App\MoneyCalendar.App.csproj" />
+    <ProjectReference Include="..\..\src\MoneyCalendar\MoneyCalendar.csproj" />
   </ItemGroup>
 
 </Project>

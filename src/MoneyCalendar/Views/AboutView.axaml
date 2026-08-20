@@ -1,0 +1,105 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MoneyCalendar.ViewModels"
+             x:Class="MoneyCalendar.Views.AboutView"
+             x:DataType="vm:AboutViewModel">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Spacing="16" MaxWidth="820" HorizontalAlignment="Left">
+
+            <!-- Identity -->
+            <Border Classes="card">
+                <StackPanel Spacing="10">
+                    <StackPanel Orientation="Horizontal" Spacing="14">
+                        <!-- The app icon itself; .ico is for Windows, this PNG is what Avalonia can draw. -->
+                        <Image Source="/Assets/app.png" Width="52" Height="52" VerticalAlignment="Center"
+                               RenderOptions.BitmapInterpolationMode="HighQuality"/>
+                        <StackPanel Spacing="2" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding AppName}" FontSize="24" FontWeight="Bold"/>
+                            <TextBlock Text="{Binding VersionText}" Classes="subtle"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <TextBlock Text="{Binding Description}" TextWrapping="Wrap" LineHeight="21"/>
+
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <HyperlinkButton Content="GitHub" Click="OnGitHub"/>
+                        <HyperlinkButton Content="Report an issue" Click="OnIssues"/>
+                    </StackPanel>
+                    <TextBlock Text="{Binding RepoUrl}" Classes="subtle small"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Updates -->
+            <Border Classes="card">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Updates" Classes="h2"/>
+                    <TextBlock Classes="subtle small" TextWrapping="Wrap"
+                               Text="Asks GitHub for the latest release. It is the only request the app makes, and nothing about you or your ledger goes with it."/>
+
+                    <CheckBox Content="Check for updates" IsChecked="{Binding CheckForUpdates}"/>
+
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Content="Check now" Click="OnCheckForUpdates"
+                                IsEnabled="{Binding !UpdateBusy}"/>
+                        <Button Content="Install update" Classes="accent" Click="OnInstallUpdate"
+                                IsVisible="{Binding CanInstallUpdate}" IsEnabled="{Binding !UpdateBusy}"/>
+                        <Button Content="Download" Click="OnDownloadUpdate"
+                                IsVisible="{Binding CanDownloadUpdate}" IsEnabled="{Binding !UpdateBusy}"/>
+                        <Button Content="Release notes" Click="OnViewRelease"
+                                IsVisible="{Binding UpdateAvailable}"/>
+                    </StackPanel>
+
+                    <ProgressBar Minimum="0" Maximum="1" Value="{Binding UpdateProgress}"
+                                 IsVisible="{Binding UpdateBusy}" Height="4"/>
+
+                    <TextBlock Text="{Binding UpdateStatusText}" TextWrapping="Wrap"
+                               Classes="income small"
+                               Classes.subtle="{Binding !UpdateAvailable}"
+                               IsVisible="{Binding UpdateStatusText, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                </StackPanel>
+            </Border>
+
+            <!-- System info -->
+            <Border Classes="card">
+                <StackPanel Spacing="10">
+                    <DockPanel>
+                        <Button DockPanel.Dock="Right" Name="CopyButton" Content="Copy info" Click="OnCopy"
+                                MinWidth="104"/>
+                        <StackPanel Spacing="2">
+                            <TextBlock Text="System info" Classes="h2"/>
+                            <TextBlock Classes="subtle small"
+                                       Text="Handy when reporting a problem. Nothing here is sent anywhere."/>
+                        </StackPanel>
+                    </DockPanel>
+
+                    <ItemsControl ItemsSource="{Binding SystemInfo}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:InfoRow">
+                                <Grid ColumnDefinitions="170,*" Margin="0,3">
+                                    <TextBlock Grid.Column="0" Text="{Binding Label}" Classes="subtle"
+                                               VerticalAlignment="Top"/>
+                                    <SelectableTextBlock Grid.Column="1" Text="{Binding Value}"
+                                                         TextWrapping="Wrap"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <!-- License -->
+            <Border Classes="card">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="License" Classes="h2"/>
+                    <TextBlock Text="{Binding LicenseSummary}" TextWrapping="Wrap"/>
+                    <Expander Header="{Binding LicenseName}" HorizontalAlignment="Stretch">
+                        <SelectableTextBlock Text="{Binding LicenseText}" TextWrapping="Wrap"
+                                             FontFamily="Consolas, Menlo, monospace" FontSize="12"
+                                             Margin="0,8,0,0"/>
+                    </Expander>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

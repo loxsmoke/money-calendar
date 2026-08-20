@@ -1,5 +1,5 @@
-using MoneyCalendar.App.Services;
-using MoneyCalendar.App.ViewModels;
+using MoneyCalendar.Services;
+using MoneyCalendar.ViewModels;
 
 namespace MoneyCalendar.Tests.Ui;
 

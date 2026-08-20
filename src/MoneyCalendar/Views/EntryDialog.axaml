@@ -1,0 +1,105 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:MoneyCalendar.ViewModels"
+        xmlns:controls="using:MoneyCalendar.Controls"
+        x:Class="MoneyCalendar.Views.EntryDialog"
+        x:DataType="vm:EntryEditorViewModel"
+        Title="{Binding Title}"
+        Width="460" SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False">
+
+    <StackPanel Margin="20" Spacing="12">
+        <TextBlock Text="{Binding Title}" Classes="h2"/>
+
+        <StackPanel Spacing="4">
+            <TextBlock Text="{Binding DateLabel}" Classes="subtle small"/>
+            <controls:DateField SelectedDate="{Binding Date}" HorizontalAlignment="Left"/>
+        </StackPanel>
+
+        <StackPanel Spacing="4">
+            <TextBlock Text="{Binding CurrencyCode, StringFormat='Amount ({0})'}" Classes="subtle small"/>
+            <TextBox Text="{Binding AmountText}" PlaceholderText="125.50"/>
+        </StackPanel>
+
+        <StackPanel Spacing="4">
+            <TextBlock Text="{Binding CategoryLabel}" Classes="subtle small"/>
+            <ComboBox ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}"
+                      HorizontalAlignment="Stretch"/>
+        </StackPanel>
+
+        <!-- Where the money comes from and, for an expense, where it goes -->
+        <StackPanel Spacing="4">
+            <TextBlock Text="{Binding AccountLabel}" Classes="subtle small"/>
+            <ComboBox ItemsSource="{Binding Accounts}" SelectedItem="{Binding SelectedAccount}"
+                      HorizontalAlignment="Stretch" IsVisible="{Binding HasAccounts}"
+                      PlaceholderText="Pick an account"/>
+            <TextBlock Text="{Binding NoAccountsText}" Classes="warning small" TextWrapping="Wrap"
+                       IsVisible="{Binding !HasAccounts}"/>
+        </StackPanel>
+
+        <StackPanel Spacing="4" IsVisible="{Binding ShowToAccountPicker}">
+            <TextBlock Text="To account" Classes="subtle small"/>
+            <ComboBox ItemsSource="{Binding ToAccounts}" SelectedItem="{Binding SelectedToAccount}"
+                      HorizontalAlignment="Stretch" IsVisible="{Binding HasToAccounts}"
+                      PlaceholderText="Pick an account"/>
+            <TextBlock Text="{Binding NoToAccountsText}" Classes="warning small" TextWrapping="Wrap"
+                       IsVisible="{Binding !HasToAccounts}"/>
+        </StackPanel>
+
+        <!-- Repeating entries: one stored row, expanded into occurrences wherever it is shown -->
+        <Border Classes="card" Padding="12" Background="{DynamicResource SidebarBackgroundBrush}">
+            <StackPanel Spacing="10">
+                <CheckBox IsChecked="{Binding Repeats}" Content="Repeats"/>
+
+                <StackPanel Spacing="10" IsVisible="{Binding Repeats}">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="How often" Classes="subtle small"/>
+                        <ComboBox ItemsSource="{Binding Frequencies}" SelectedItem="{Binding SelectedFrequency}"
+                                  HorizontalAlignment="Stretch"/>
+                    </StackPanel>
+
+                    <Grid ColumnDefinitions="*,10,*">
+                        <StackPanel Grid.Column="0" Spacing="4" IsVisible="{Binding ShowDayOfMonth}">
+                            <TextBlock Text="{Binding FirstDayLabel}" Classes="subtle small"/>
+                            <ComboBox ItemsSource="{Binding MonthDays}" SelectedItem="{Binding SelectedDayOfMonth}"
+                                      HorizontalAlignment="Stretch" MaxDropDownHeight="260"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2" Spacing="4" IsVisible="{Binding ShowSecondDay}">
+                            <TextBlock Text="Second day" Classes="subtle small"/>
+                            <ComboBox ItemsSource="{Binding SecondMonthDays}" SelectedItem="{Binding SelectedSecondDay}"
+                                      HorizontalAlignment="Stretch" MaxDropDownHeight="260"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <StackPanel Spacing="4" IsVisible="{Binding ShowWeekday}">
+                        <TextBlock Text="On" Classes="subtle small"/>
+                        <ComboBox ItemsSource="{Binding Weekdays}" SelectedItem="{Binding SelectedWeekday}"
+                                  HorizontalAlignment="Left" MinWidth="180"/>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <CheckBox IsChecked="{Binding Ends}" Content="Ends after" VerticalAlignment="Center"/>
+                        <controls:DateField SelectedDate="{Binding EndDate}" VerticalAlignment="Center"
+                                            IsEnabled="{Binding Ends}"/>
+                    </StackPanel>
+
+                    <TextBlock Text="{Binding RepeatSummary}" Classes="subtle small" TextWrapping="Wrap"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <StackPanel Spacing="4">
+            <TextBlock Text="Note" Classes="subtle small"/>
+            <TextBox Text="{Binding Note}" PlaceholderText="Optional" AcceptsReturn="True" MinHeight="52"/>
+        </StackPanel>
+
+        <TextBlock Text="{Binding ErrorText}" Classes="error small" TextWrapping="Wrap"
+                   IsVisible="{Binding ErrorText, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+
+        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+            <Button Content="Cancel" Click="OnCancelClick"/>
+            <Button Content="Save" Classes="accent" Click="OnSaveClick" IsDefault="True"/>
+        </StackPanel>
+    </StackPanel>
+</Window>

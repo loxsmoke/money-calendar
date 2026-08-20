@@ -1,0 +1,57 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:MoneyCalendar.ViewModels"
+        x:Class="MoneyCalendar.Views.CategoryDialog"
+        x:DataType="vm:CategoryEditorViewModel"
+        Title="{Binding Title}"
+        Width="430" SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False">
+
+    <StackPanel Margin="20" Spacing="12">
+        <TextBlock Text="{Binding Title}" Classes="h2"/>
+
+        <StackPanel Spacing="4">
+            <TextBlock Text="Name" Classes="subtle small"/>
+            <TextBox Text="{Binding Name}" PlaceholderText="e.g. Childcare"/>
+        </StackPanel>
+
+        <StackPanel Spacing="4">
+            <TextBlock Text="Belongs to" Classes="subtle small"/>
+            <ComboBox ItemsSource="{Binding Kinds}" SelectedItem="{Binding SelectedKind}"
+                      HorizontalAlignment="Left" MinWidth="180" IsEnabled="{Binding CanChangeKind}"/>
+            <TextBlock Classes="subtle small" IsVisible="{Binding !CanChangeKind}"
+                       Text="A category keeps its side of the app; entries are already filed under it."/>
+        </StackPanel>
+
+        <StackPanel Spacing="6">
+            <TextBlock Text="Color" Classes="subtle small"/>
+            <ItemsControl ItemsSource="{Binding Colors}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:ColorChoice">
+                        <Button Classes="swatch" Classes.selected="{Binding IsSelected}"
+                                Background="{Binding Brush}" Click="OnColorClick"
+                                CommandParameter="{Binding}" ToolTip.Tip="{Binding Hex}">
+                            <!-- A tick reads at a glance; a ring alone is lost on a saturated square. -->
+                            <TextBlock Text="✓" Foreground="White" FontWeight="Bold" FontSize="14"
+                                       IsVisible="{Binding IsSelected}"/>
+                        </Button>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+
+        <TextBlock Text="{Binding ErrorText}" Classes="error small" TextWrapping="Wrap"
+                   IsVisible="{Binding ErrorText, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+
+        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+            <Button Content="Cancel" Click="OnCancelClick"/>
+            <Button Content="Save" Classes="accent" Click="OnSaveClick" IsDefault="True"/>
+        </StackPanel>
+    </StackPanel>
+</Window>

@@ -1,0 +1,70 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="using:MoneyCalendar.Controls"
+             xmlns:sys="using:System"
+             x:Class="MoneyCalendar.Controls.DateField">
+
+    <!--
+      A date field that opens a real month calendar: ‹ › step months and clicking a day picks
+      it. Everything inside is filled from code-behind, so the control never depends on the
+      page's DataContext.
+    -->
+
+    <Button Name="Trigger" MinWidth="150" HorizontalContentAlignment="Left">
+        <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="📅" FontSize="13" VerticalAlignment="Center"/>
+            <TextBlock Name="TriggerText" VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <Button.Flyout>
+            <Flyout Placement="BottomEdgeAlignedLeft">
+                <StackPanel Width="252" Spacing="6">
+
+                    <DockPanel>
+                        <Button DockPanel.Dock="Left" Content="‹" Padding="10,2" Click="OnPreviousMonth"
+                                ToolTip.Tip="Previous month"/>
+                        <Button DockPanel.Dock="Right" Content="›" Padding="10,2" Click="OnNextMonth"
+                                ToolTip.Tip="Next month"/>
+                        <TextBlock Name="MonthLabel" FontWeight="SemiBold" HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"/>
+                    </DockPanel>
+
+                    <ItemsControl Name="WeekdayHeaders">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid Columns="7"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="sys:String">
+                                <TextBlock Text="{Binding}" Classes="subtle small"
+                                           HorizontalAlignment="Center" Margin="0,2"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <ItemsControl Name="DayGrid">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid Columns="7"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="controls:DateFieldDay">
+                                <Button Classes="pickerDay"
+                                        Classes.outside="{Binding !IsInMonth}"
+                                        Classes.today="{Binding IsToday}"
+                                        Classes.selected="{Binding IsSelected}"
+                                        Content="{Binding Text}"
+                                        CommandParameter="{Binding}"
+                                        Click="OnDayClick"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <Button Content="Today" Click="OnToday" HorizontalAlignment="Center" FontSize="12"/>
+                </StackPanel>
+            </Flyout>
+        </Button.Flyout>
+    </Button>
+</UserControl>
