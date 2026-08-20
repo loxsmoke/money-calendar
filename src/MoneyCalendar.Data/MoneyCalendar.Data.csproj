@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\MoneyCalendar.Core\MoneyCalendar.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Sqlite.Core + bundle_green: the plain e_sqlite3 provider. The prototype keeps the
+         database unencrypted, so no SQLCipher bundle is pulled in. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite.Core" Version="10.0.10" />
+    <PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.1.11" />
+    <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="3.53.3" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,64 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+      Semantic colors. Income is green and expense is a warm clay tone; red stays reserved
+      for errors and over-budget states so the calendar never reads as "everything is wrong".
+    -->
+
+    <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Light">
+            <Color x:Key="IncomeColor">#1B7F3B</Color>
+            <Color x:Key="IncomePillColor">#DCF0E3</Color>
+            <Color x:Key="ExpenseColor">#B4552C</Color>
+            <Color x:Key="ExpensePillColor">#FBE6DC</Color>
+            <Color x:Key="ErrorColor">#C62828</Color>
+            <Color x:Key="WarningColor">#9A5B00</Color>
+            <Color x:Key="SubtleTextColor">#6B6B6B</Color>
+            <Color x:Key="CardBackgroundColor">#FFFFFF</Color>
+            <Color x:Key="CardBorderColor">#E4E4E0</Color>
+            <Color x:Key="BannerErrorBackgroundColor">#FDE7E7</Color>
+            <Color x:Key="BannerInfoBackgroundColor">#E4F1EF</Color>
+            <Color x:Key="SkeletonColor">#ECECE9</Color>
+            <Color x:Key="SidebarBackgroundColor">#F2F2EF</Color>
+            <Color x:Key="CalendarCellColor">#FBFBF9</Color>
+            <Color x:Key="CalendarOutsideColor">#F0F0EC</Color>
+            <Color x:Key="TodayRingColor">#0B6E63</Color>
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Dark">
+            <Color x:Key="IncomeColor">#6FCF8B</Color>
+            <Color x:Key="IncomePillColor">#20402C</Color>
+            <Color x:Key="ExpenseColor">#E5926A</Color>
+            <Color x:Key="ExpensePillColor">#43291D</Color>
+            <Color x:Key="ErrorColor">#EF7070</Color>
+            <Color x:Key="WarningColor">#F0B45C</Color>
+            <Color x:Key="SubtleTextColor">#9A9AA0</Color>
+            <Color x:Key="CardBackgroundColor">#26262B</Color>
+            <Color x:Key="CardBorderColor">#3A3A41</Color>
+            <Color x:Key="BannerErrorBackgroundColor">#4A2323</Color>
+            <Color x:Key="BannerInfoBackgroundColor">#22383A</Color>
+            <Color x:Key="SkeletonColor">#313137</Color>
+            <Color x:Key="SidebarBackgroundColor">#232327</Color>
+            <Color x:Key="CalendarCellColor">#2B2B31</Color>
+            <Color x:Key="CalendarOutsideColor">#232328</Color>
+            <Color x:Key="TodayRingColor">#14B8A6</Color>
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+
+    <SolidColorBrush x:Key="IncomeBrush" Color="{DynamicResource IncomeColor}"/>
+    <SolidColorBrush x:Key="IncomePillBrush" Color="{DynamicResource IncomePillColor}"/>
+    <SolidColorBrush x:Key="ExpenseBrush" Color="{DynamicResource ExpenseColor}"/>
+    <SolidColorBrush x:Key="ExpensePillBrush" Color="{DynamicResource ExpensePillColor}"/>
+    <SolidColorBrush x:Key="ErrorBrush" Color="{DynamicResource ErrorColor}"/>
+    <SolidColorBrush x:Key="WarningBrush" Color="{DynamicResource WarningColor}"/>
+    <SolidColorBrush x:Key="SubtleTextBrush" Color="{DynamicResource SubtleTextColor}"/>
+    <SolidColorBrush x:Key="CardBackgroundBrush" Color="{DynamicResource CardBackgroundColor}"/>
+    <SolidColorBrush x:Key="CardBorderBrush" Color="{DynamicResource CardBorderColor}"/>
+    <SolidColorBrush x:Key="BannerErrorBackgroundBrush" Color="{DynamicResource BannerErrorBackgroundColor}"/>
+    <SolidColorBrush x:Key="BannerInfoBackgroundBrush" Color="{DynamicResource BannerInfoBackgroundColor}"/>
+    <SolidColorBrush x:Key="SkeletonBrush" Color="{DynamicResource SkeletonColor}"/>
+    <SolidColorBrush x:Key="SidebarBackgroundBrush" Color="{DynamicResource SidebarBackgroundColor}"/>
+    <SolidColorBrush x:Key="CalendarCellBrush" Color="{DynamicResource CalendarCellColor}"/>
+    <SolidColorBrush x:Key="CalendarOutsideBrush" Color="{DynamicResource CalendarOutsideColor}"/>
+    <SolidColorBrush x:Key="TodayRingBrush" Color="{DynamicResource TodayRingColor}"/>
+</ResourceDictionary>

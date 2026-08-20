@@ -1,0 +1,178 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Shared visual vocabulary for all views. -->
+
+    <Style Selector="Border.card">
+        <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="Padding" Value="16"/>
+    </Style>
+
+    <Style Selector="TextBlock.h2">
+        <Setter Property="FontSize" Value="16"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+
+    <Style Selector="TextBlock.stat">
+        <Setter Property="FontSize" Value="24"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+    </Style>
+
+    <Style Selector="TextBlock.subtle">
+        <Setter Property="Foreground" Value="{DynamicResource SubtleTextBrush}"/>
+    </Style>
+
+    <Style Selector="TextBlock.small">
+        <Setter Property="FontSize" Value="12"/>
+    </Style>
+
+    <Style Selector="TextBlock.income">
+        <Setter Property="Foreground" Value="{DynamicResource IncomeBrush}"/>
+    </Style>
+
+    <Style Selector="TextBlock.expense">
+        <Setter Property="Foreground" Value="{DynamicResource ExpenseBrush}"/>
+    </Style>
+
+    <Style Selector="TextBlock.error">
+        <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}"/>
+    </Style>
+
+    <Style Selector="TextBlock.warning">
+        <Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/>
+    </Style>
+
+    <!-- Loading skeleton block -->
+    <Style Selector="Border.skeleton">
+        <Setter Property="Background" Value="{DynamicResource SkeletonBrush}"/>
+        <Setter Property="CornerRadius" Value="4"/>
+        <Setter Property="Height" Value="18"/>
+    </Style>
+
+    <!-- Calendar day cell -->
+    <Style Selector="Button.calendarDay">
+        <Setter Property="Background" Value="{DynamicResource CalendarCellBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="6"/>
+        <Setter Property="Padding" Value="6,4"/>
+        <Setter Property="Margin" Value="2"/>
+        <Setter Property="HorizontalAlignment" Value="Stretch"/>
+        <Setter Property="VerticalAlignment" Value="Stretch"/>
+        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        <Setter Property="VerticalContentAlignment" Value="Top"/>
+        <Setter Property="MinHeight" Value="74"/>
+    </Style>
+
+    <Style Selector="Button.calendarDay.outside">
+        <Setter Property="Background" Value="{DynamicResource CalendarOutsideBrush}"/>
+        <Setter Property="Opacity" Value="0.55"/>
+    </Style>
+
+    <Style Selector="Button.calendarDay.today">
+        <Setter Property="BorderBrush" Value="{DynamicResource TodayRingBrush}"/>
+        <Setter Property="BorderThickness" Value="2"/>
+    </Style>
+
+    <Style Selector="Button.calendarDay.selected">
+        <Setter Property="BorderBrush" Value="{DynamicResource TodayRingBrush}"/>
+        <Setter Property="BorderThickness" Value="2"/>
+        <Setter Property="Background" Value="{DynamicResource BannerInfoBackgroundBrush}"/>
+    </Style>
+
+    <!-- Compact day cell inside the date picker's month grid -->
+    <Style Selector="Button.pickerDay">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="CornerRadius" Value="4"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="Margin" Value="1"/>
+        <Setter Property="Height" Value="30"/>
+        <Setter Property="HorizontalAlignment" Value="Stretch"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="FontSize" Value="12"/>
+    </Style>
+
+    <Style Selector="Button.pickerDay.outside">
+        <Setter Property="Foreground" Value="{DynamicResource SubtleTextBrush}"/>
+        <Setter Property="Opacity" Value="0.6"/>
+    </Style>
+
+    <Style Selector="Button.pickerDay.today">
+        <Setter Property="BorderBrush" Value="{DynamicResource TodayRingBrush}"/>
+    </Style>
+
+    <Style Selector="Button.pickerDay.selected">
+        <Setter Property="Background" Value="{DynamicResource TodayRingBrush}"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+
+    <Style Selector="Button.pickerDay.selected:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource TodayRingBrush}"/>
+        <Setter Property="TextElement.Foreground" Value="White"/>
+    </Style>
+
+    <!-- Destructive action: red, so it never reads as just another button -->
+    <Style Selector="Button.danger">
+        <Setter Property="Background" Value="{DynamicResource ErrorBrush}"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+
+    <Style Selector="Button.danger /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource ErrorBrush}"/>
+        <Setter Property="TextElement.Foreground" Value="White"/>
+    </Style>
+
+    <Style Selector="Button.danger:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource ErrorColor}"/>
+        <Setter Property="TextElement.Foreground" Value="White"/>
+        <Setter Property="Opacity" Value="0.85"/>
+    </Style>
+
+    <Style Selector="Button.danger:disabled /template/ ContentPresenter">
+        <Setter Property="Opacity" Value="0.45"/>
+    </Style>
+
+    <!-- Color swatch in the category editor -->
+    <Style Selector="Button.swatch">
+        <Setter Property="Width" Value="30"/>
+        <Setter Property="Height" Value="30"/>
+        <Setter Property="Margin" Value="3"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="CornerRadius" Value="6"/>
+        <Setter Property="BorderThickness" Value="2"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+    </Style>
+
+    <Style Selector="Button.swatch.selected">
+        <Setter Property="BorderBrush" Value="{DynamicResource TodayRingBrush}"/>
+        <Setter Property="BorderThickness" Value="3"/>
+    </Style>
+
+    <!-- The swatch keeps its own color while hovered or pressed; only the ring reacts. -->
+    <Style Selector="Button.swatch:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="Transparent"/>
+    </Style>
+
+    <!-- Amount pills inside a calendar day -->
+    <Style Selector="Border.pill">
+        <Setter Property="CornerRadius" Value="9"/>
+        <Setter Property="Padding" Value="6,1"/>
+        <Setter Property="HorizontalAlignment" Value="Stretch"/>
+    </Style>
+
+    <Style Selector="Border.pill.income">
+        <Setter Property="Background" Value="{DynamicResource IncomePillBrush}"/>
+    </Style>
+
+    <Style Selector="Border.pill.expense">
+        <Setter Property="Background" Value="{DynamicResource ExpensePillBrush}"/>
+    </Style>
+</Styles>

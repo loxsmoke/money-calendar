@@ -1,0 +1,26 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:MoneyCalendar.App.ViewModels"
+        x:Class="MoneyCalendar.App.Views.AccountDeleteDialog"
+        x:DataType="vm:AccountDeletionPlan"
+        Title="{Binding Title}"
+        Width="440" SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False">
+
+    <StackPanel Margin="20" Spacing="14">
+        <TextBlock Text="{Binding Message}" TextWrapping="Wrap"/>
+
+        <StackPanel Spacing="4" IsVisible="{Binding NeedsReassignment}">
+            <TextBlock Text="Move its transactions to" Classes="subtle small"/>
+            <ComboBox Name="ReplacementPicker" ItemsSource="{Binding Replacements}"
+                      HorizontalAlignment="Stretch"/>
+        </StackPanel>
+
+        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+            <Button Content="Cancel" Click="OnCancelClick" IsCancel="True"/>
+            <Button Name="DeleteButton" Content="Delete" Classes="accent" Click="OnDeleteClick"
+                    IsVisible="{Binding !IsBlocked}" IsDefault="True"/>
+        </StackPanel>
+    </StackPanel>
+</Window>

@@ -1,0 +1,204 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MoneyCalendar.App.ViewModels"
+             xmlns:controls="using:MoneyCalendar.App.Controls"
+             x:Class="MoneyCalendar.App.Views.LedgerView"
+             x:DataType="vm:LedgerViewModel">
+
+    <!--
+      Income and Expenses are the same screen with a different kind: a range summary on top,
+      the per-category breakdown beside it, and the list of that kind's entries underneath.
+    -->
+
+    <Panel>
+
+        <!-- Loading: skeleton, first load only -->
+        <StackPanel IsVisible="{Binding IsLoading}" Spacing="14">
+            <Border Classes="card skeleton" Height="56"/>
+            <Border Classes="card skeleton" Height="120"/>
+            <Border Classes="skeleton" Height="28"/>
+            <Border Classes="skeleton" Height="28"/>
+            <Border Classes="skeleton" Height="28"/>
+        </StackPanel>
+
+        <!-- Error (first load failed) -->
+        <StackPanel IsVisible="{Binding IsError}" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
+            <TextBlock Text="{Binding ErrorMessage}" Classes="error" HorizontalAlignment="Center"/>
+            <Button Content="Retry" Command="{Binding ReloadCommand}" HorizontalAlignment="Center"/>
+        </StackPanel>
+
+        <DockPanel IsVisible="{Binding !IsLoading}">
+
+            <!-- Range + actions -->
+            <Border DockPanel.Dock="Top" Classes="card" Padding="12" Margin="0,0,0,12">
+                <StackPanel Spacing="8">
+                    <WrapPanel ItemSpacing="8" LineSpacing="8">
+                        <TextBlock Text="Range from" Classes="subtle" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                        <ComboBox ItemsSource="{Binding BackRangeOptions}"
+                                  SelectedItem="{Binding SelectedBackRange}"
+                                  MinWidth="140" VerticalAlignment="Center"/>
+                        <controls:DateField SelectedDate="{Binding StartDate}" VerticalAlignment="Center"/>
+                        <TextBlock Text="to" Classes="subtle" VerticalAlignment="Center" Margin="4,0"/>
+                        <ComboBox ItemsSource="{Binding ForwardRangeOptions}"
+                                  SelectedItem="{Binding SelectedForwardRange}"
+                                  MinWidth="140" VerticalAlignment="Center"/>
+                        <controls:DateField SelectedDate="{Binding EndDate}" VerticalAlignment="Center"/>
+                    </WrapPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <TextBlock Text="{Binding RangeLabel}" Classes="subtle small" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding RangeNotice}" Classes="warning small" VerticalAlignment="Center"
+                                   IsVisible="{Binding RangeNotice, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- Range summary: totals on the left, category breakdown on the right -->
+            <Grid DockPanel.Dock="Top" ColumnDefinitions="2*,12,3*" Margin="0,0,0,12">
+                <Border Grid.Column="0" Classes="card">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="Summary for this range" Classes="h2"/>
+                        <UniformGrid Columns="2" >
+                            <StackPanel Spacing="2" Margin="0,0,10,8">
+                                <TextBlock Text="Total" Classes="subtle small"/>
+                                <TextBlock Text="{Binding TotalText}" Classes="stat"
+                                           Classes.income="{Binding IsIncome}"
+                                           Classes.expense="{Binding !IsIncome}"/>
+                            </StackPanel>
+                            <StackPanel Spacing="2" Margin="0,0,0,8">
+                                <TextBlock Text="Entries" Classes="subtle small"/>
+                                <TextBlock Text="{Binding CountText}" FontSize="18" FontWeight="SemiBold"/>
+                            </StackPanel>
+                            <StackPanel Spacing="2" Margin="0,0,10,0">
+                                <TextBlock Text="Average per day" Classes="subtle small"/>
+                                <TextBlock Text="{Binding AveragePerDayText}" FontSize="16"/>
+                            </StackPanel>
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="Largest single entry" Classes="subtle small"/>
+                                <TextBlock Text="{Binding LargestText}" FontSize="16"/>
+                            </StackPanel>
+                        </UniformGrid>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="2" Classes="card">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="{Binding CategoryColumnHeader, StringFormat='By {0}'}" Classes="h2"/>
+                        <ScrollViewer MaxHeight="190" VerticalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding Breakdown}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:CategoryBreakdownItem">
+                                        <Grid ColumnDefinitions="14,130,*,110,52" Margin="0,3">
+                                            <Ellipse Grid.Column="0" Width="10" Height="10" Fill="{Binding Color}"
+                                                     VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center"
+                                                       Margin="6,0,0,0"/>
+                                            <ProgressBar Grid.Column="2" Minimum="0" Maximum="1"
+                                                         Value="{Binding BarFraction}" Height="8" Margin="10,0"
+                                                         Foreground="{Binding Color}" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="3" Text="{Binding AmountText}" TextAlignment="Right"
+                                                       VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="4" Text="{Binding ShareText}" Classes="subtle small"
+                                                       TextAlignment="Right" VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- Entry list, with the actions that operate on it -->
+            <Border Classes="card" Padding="0">
+                <DockPanel>
+
+                    <Border DockPanel.Dock="Top" Padding="10" BorderThickness="0,0,0,1"
+                            BorderBrush="{DynamicResource CardBorderBrush}">
+                        <WrapPanel ItemSpacing="8" LineSpacing="8">
+                            <TextBlock Text="Transactions" Classes="h2" VerticalAlignment="Center"
+                                       Margin="4,0,8,0"/>
+                            <TextBox Text="{Binding SearchText}" MinWidth="220" VerticalAlignment="Center"
+                                     PlaceholderText="Search note, category, card…"/>
+                            <Button Content="Clear" Command="{Binding ClearSearchCommand}" VerticalAlignment="Center"/>
+                            <CheckBox IsChecked="{Binding ShowRepeatingOnly}" Content="Show repeating only"
+                                      VerticalAlignment="Center"/>
+                            <Button Content="{Binding AddButtonText}" Classes="accent" Click="OnAddClick"
+                                    VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding StatusText}" Classes="income small" VerticalAlignment="Center"
+                                       IsVisible="{Binding StatusText, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                        </WrapPanel>
+                    </Border>
+
+                    <Panel>
+                        <StackPanel IsVisible="{Binding IsEmpty}" HorizontalAlignment="Center"
+                                    VerticalAlignment="Center" Spacing="10">
+                            <!-- The app icon itself, at the size an empty page can carry. -->
+                            <Image Source="/Assets/app.png" Width="96" Height="96"
+                                   HorizontalAlignment="Center" Opacity="0.75"
+                                   RenderOptions.BitmapInterpolationMode="HighQuality"/>
+                            <TextBlock Text="{Binding EmptyStateText}" FontSize="16" HorizontalAlignment="Center"/>
+                        </StackPanel>
+
+                        <DataGrid Name="EntriesGrid" ItemsSource="{Binding Rows}" IsVisible="{Binding !IsEmpty}"
+                                  SelectedItem="{Binding SelectedRow}"
+                                  AutoGenerateColumns="False" IsReadOnly="True"
+                                  CanUserSortColumns="True" CanUserResizeColumns="True"
+                                  DoubleTapped="OnGridDoubleTapped"
+                                  Background="Transparent" GridLinesVisibility="Horizontal"
+                                  HorizontalGridLinesBrush="{DynamicResource CardBorderBrush}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Date" Binding="{Binding DateText}" Width="110"
+                                                    SortMemberPath="Date"/>
+                            <DataGridTemplateColumn Header="Repeating" Width="105" SortMemberPath="IsRecurring">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="vm:EntryRowViewModel">
+                                        <!-- An indicator, not a control: the pattern is edited in the dialog. -->
+                                        <CheckBox IsChecked="{Binding IsRecurring, Mode=OneWay}" IsHitTestVisible="False"
+                                                  HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                  ToolTip.Tip="{Binding RepeatText}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="Category" Width="155" SortMemberPath="CategoryName">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate x:DataType="vm:EntryRowViewModel">
+                                            <StackPanel Orientation="Horizontal" Spacing="6" Margin="6,0">
+                                                <Ellipse Width="9" Height="9" Fill="{Binding CategoryColor}"
+                                                         VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding CategoryName}" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="Account / card" Binding="{Binding AccountText}" Width="*"/>
+                                <DataGridTextColumn Header="Note" Binding="{Binding NoteText}" Width="140"/>
+                                <DataGridTemplateColumn Header="Amount" Width="120" SortMemberPath="SortAmount">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate x:DataType="vm:EntryRowViewModel">
+                                            <TextBlock Text="{Binding AmountText}" TextAlignment="Right"
+                                                       Classes.income="{Binding IsIncome}"
+                                                       Classes.expense="{Binding !IsIncome}"
+                                                       VerticalAlignment="Center" Margin="4,0,10,0"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="" Width="110" CanUserSort="False">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate x:DataType="vm:EntryRowViewModel">
+                                            <StackPanel Orientation="Horizontal" Spacing="4" Margin="4,0">
+                                                <Button Content="Edit" FontSize="12" Padding="8,3" Click="OnEditClick"
+                                                        CommandParameter="{Binding}"/>
+                                                <Button Content="Delete" FontSize="12" Padding="8,3" Click="OnDeleteClick"
+                                                        CommandParameter="{Binding}"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Panel>
+                </DockPanel>
+            </Border>
+        </DockPanel>
+    </Panel>
+</UserControl>

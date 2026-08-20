@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/MoneyCalendar.App/MoneyCalendar.App.csproj" />
+    <Project Path="src/MoneyCalendar.Core/MoneyCalendar.Core.csproj" />
+    <Project Path="src/MoneyCalendar.Data/MoneyCalendar.Data.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/MoneyCalendar.Tests/MoneyCalendar.Tests.csproj" />
+  </Folder>
+</Solution>

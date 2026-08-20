@@ -1,0 +1,82 @@
+# Build output
+bin/
+obj/
+artifacts/
+publish/
+out/
+Debug/
+Release/
+.run-build/
+.tmp-build/
+
+# IDE and editor state
+.vs/
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.rsuser
+
+# Test results and coverage
+TestResults/
+*.trx
+coverage/
+coverage.*
+*.coverage
+*.coveragexml
+*.opencover.xml
+*.cobertura.xml
+
+# .NET local state
+.dotnet/
+.nuget/
+*.nupkg
+*.snupkg
+packages/
+project.lock.json
+project.assets.json
+*.binlog
+
+# Local agent/tool state
+.claude/settings.local.json
+.dotsy/
+
+# Local secrets
+secrets.json
+appsettings.local.json
+appsettings.*.local.json
+*.secrets.json
+.env
+.env.*
+!.env.example
+
+# Local databases
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# Logs and crash dumps
+logs/
+*.log
+*.dmp
+*.dump
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+*.bak
+*.backup
+*.swp
+*~
+
+# OS metadata
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store

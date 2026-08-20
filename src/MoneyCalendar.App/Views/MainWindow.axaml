@@ -1,0 +1,51 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:MoneyCalendar.App.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="820"
+        x:Class="MoneyCalendar.App.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Icon="/Assets/app.ico"
+        Width="1280" Height="820" MinWidth="1000" MinHeight="640"
+        Title="{Binding WindowTitle}">
+
+    <Grid>
+
+        <SplitView DisplayMode="Inline" IsPaneOpen="True" OpenPaneLength="210"
+                   PaneBackground="{DynamicResource SidebarBackgroundBrush}">
+            <SplitView.Pane>
+                <DockPanel Margin="0,8">
+                    <StackPanel DockPanel.Dock="Top" Margin="20,8,20,20" Spacing="2">
+                        <TextBlock Text="MONEY" FontSize="18" FontWeight="Bold" LetterSpacing="2"/>
+                        <TextBlock Text="CALENDAR" FontSize="18" FontWeight="Bold" LetterSpacing="2"
+                                   Foreground="{DynamicResource TodayRingBrush}"/>
+                    </StackPanel>
+                    <TextBlock DockPanel.Dock="Bottom" Text="{Binding TodayText}" Classes="subtle small"
+                               Margin="20,12" TextWrapping="Wrap"/>
+                    <ListBox ItemsSource="{Binding NavItems}"
+                             SelectedItem="{Binding SelectedNavItem}"
+                             Background="Transparent">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="vm:NavItem">
+                                <StackPanel Orientation="Horizontal" Spacing="12" Margin="8,4">
+                                    <TextBlock Text="{Binding Glyph}" FontSize="16" VerticalAlignment="Center"
+                                               Width="20" TextAlignment="Center"/>
+                                    <TextBlock Text="{Binding Label}" FontSize="14" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </DockPanel>
+            </SplitView.Pane>
+
+            <Grid RowDefinitions="Auto,*">
+                <TextBlock Grid.Row="0" Margin="24,16,24,8"
+                           Text="{Binding CurrentPage.Title, FallbackValue=''}"
+                           FontSize="24" FontWeight="SemiBold" VerticalAlignment="Center"/>
+
+                <ContentControl Grid.Row="1" Margin="24,0,24,16" Content="{Binding CurrentPage}"/>
+            </Grid>
+        </SplitView>
+    </Grid>
+</Window>
