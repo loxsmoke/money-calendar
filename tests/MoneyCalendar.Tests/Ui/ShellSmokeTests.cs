@@ -74,9 +74,10 @@ public class ShellSmokeTests(HeadlessSessionFixture fixture)
         var summary = host.Get<SummaryViewModel>();
         await summary.ReloadAsync();
 
-        // Income bars, expense bars, balance line — no budget line.
+        // Income bars, expense bars, balance line, and the red overlay for the part of the
+        // balance that is below zero — no budget line.
         Assert.Equal(
-            new[] { "Income", "Expenses", "Balance" },
+            new[] { "Income", "Expenses", "Balance", "Deficit" },
             summary.ChartSeries.Select(s => s.Name));
         Assert.Single(summary.ChartXAxes);
         // Bars and balance share one axis, so their heights compare directly.

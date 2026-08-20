@@ -23,6 +23,12 @@ public partial class SummaryViewModel : RangePageViewModel
     private static readonly SKColor IncomeColor = SKColor.Parse("#1B7F3B");
     private static readonly SKColor ExpenseColor = SKColor.Parse("#C2603A");
     private static readonly SKColor BalanceColor = SKColor.Parse("#2E9E52");
+
+    // Red is reserved for over-budget states (see Themes/Semantic.axaml), and a balance that has
+    // gone under zero is exactly that: the line turns the error red, and the water it is under is
+    // painted in the pink the error banners use.
+    private static readonly SKColor DeficitColor = SKColor.Parse("#C62828");
+    private static readonly SKColor DeficitFillColor = SKColor.Parse("#FDE7E7").WithAlpha(0xCC);
     private static readonly SKColor GridColor = SKColor.Parse("#D8D8D4");
 
     /// <summary>
@@ -142,6 +148,22 @@ public partial class SummaryViewModel : RangePageViewModel
                 GeometrySize = 0,
                 LineSmoothness = 0,
             },
+            // The same staircase again, but only where it runs below zero, drawn over the green
+            // one: red line, pink water between it and the zero level. A second series rather
+            // than a per-point colour because a line series carries one stroke, and it is hidden
+            // from tooltips so hovering still reports a single balance.
+            new LineSeries<ObservablePoint>
+            {
+                Name = "Deficit",
+                Values = DeficitPoints(balance),
+                Stroke = new SolidColorPaint(DeficitColor) { StrokeThickness = 2.5f },
+                Fill = new SolidColorPaint(DeficitFillColor),
+                GeometryFill = null,
+                GeometryStroke = null,
+                GeometrySize = 0,
+                LineSmoothness = 0,
+                IsHoverable = false,
+            },
         ];
 
         ChartXAxes =
@@ -213,6 +235,48 @@ public partial class SummaryViewModel : RangePageViewModel
 
         points.Add(new ObservablePoint(buckets.Count - 0.5, (double)buckets[^1].ClosingBalance));
         return points;
+    }
+
+    /// <summary>
+    /// The stretch of the staircase that is under water, as a polyline of its own: the points
+    /// below zero, the exact crossings where the line passes through zero, and an empty point
+    /// everywhere else so each dip is drawn as its own path rather than joined to the next.
+    ///
+    /// A line series closes its fill at zero, so filling this one paints the deficit itself —
+    /// from the line up to the zero level, and nothing above it.
+    /// </summary>
+    internal static IReadOnlyList<ObservablePoint> DeficitPoints(IReadOnlyList<ObservablePoint> balance)
+    {
+        var deficit = new List<ObservablePoint>(balance.Count + 4);
+        var anyBelow = false;
+
+        for (var i = 0; i < balance.Count; i++)
+        {
+            var x = balance[i].X ?? 0d;
+            var y = balance[i].Y ?? 0d;
+
+            // A crossing belongs to both sides of the line: it closes the dip that ends here, or
+            // opens the one that starts here. The two points of a riser share an x, so a step
+            // straight through zero puts the crossing on the riser itself.
+            if (i > 0 && balance[i - 1].Y is { } previousY && previousY < 0 != y < 0)
+            {
+                var previousX = balance[i - 1].X ?? 0d;
+                var t = (0d - previousY) / (y - previousY);
+                deficit.Add(new ObservablePoint(previousX + (t * (x - previousX)), 0d));
+            }
+
+            if (y < 0)
+            {
+                deficit.Add(new ObservablePoint(x, y));
+                anyBelow = true;
+            }
+            else
+            {
+                deficit.Add(new ObservablePoint(x, null));
+            }
+        }
+
+        return anyBelow ? deficit : [];
     }
 
     private static string BucketLabelText(BucketTotals bucket, BucketSize size) =>
