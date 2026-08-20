@@ -29,6 +29,16 @@ public static class Brand
     /// <summary>Where to report a problem.</summary>
     public const string IssuesUrl = "https://github.com/LoxSmoke/money-calendar/issues";
 
+    /// <summary>The newest release, for a human to look at.</summary>
+    public const string ReleasesUrl = RepoUrl + "/releases/latest";
+
+    /// <summary>The same, as JSON — the only address the app ever calls.</summary>
+    public const string LatestReleaseApiUrl =
+        "https://api.github.com/repos/loxsmoke/money-calendar/releases/latest";
+
+    /// <summary>The page for one released version.</summary>
+    public static string ReleaseTagUrl(string version) => $"{RepoUrl}/releases/tag/v{version}";
+
     public const string LicenseName = "MIT License";
 
     /// <summary>The full license, mirrored by the LICENSE file at the repository root.</summary>

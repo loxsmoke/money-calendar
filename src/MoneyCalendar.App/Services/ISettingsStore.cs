@@ -16,6 +16,12 @@ public sealed record AppSettings
     /// from Settings → Developer; a name that no longer exists falls back to the default.
     /// </summary>
     public string DatabaseName { get; init; } = "money-calendar";
+
+    /// <summary>
+    /// Whether the About section asks GitHub for the latest release. On by default; turning it
+    /// off means the app makes no network requests at all.
+    /// </summary>
+    public bool CheckForUpdates { get; init; } = true;
 }
 
 public interface ISettingsStore

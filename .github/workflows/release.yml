@@ -1,0 +1,140 @@
+name: Release
+
+# Manually triggered. Stamps the given version into MoneyCalendar.App, runs the tests,
+# publishes a self-contained single-file build, and only once that succeeds commits the
+# version bump, tags it, and publishes a GitHub Release with a portable zip attached.
+#
+# The zip is named MoneyCalendar-<version>-win-x64-portable.zip because that is the asset
+# the in-app update check looks for — see UpdateCheck.PortableAssetName.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release, three numeric parts, optionally with a pre-release suffix (1.2.0 or 1.2.0-rc1)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    env:
+      RID: win-x64
+      PUBLISH_DIR: publish/win-x64
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Require a branch run
+        if: ${{ github.ref_type != 'branch' }}
+        shell: bash
+        run: |
+          echo "::error::Run this workflow from the branch that should receive the version commit" >&2
+          exit 1
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Validate version
+        id: version
+        shell: bash
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          # The title bar and the update check both compare three numeric parts, so the
+          # assembly version is the version with any pre-release suffix stripped.
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::'$VERSION' is not a three-part version, optionally with a pre-release suffix" >&2
+            exit 1
+          fi
+
+          TAG="v$VERSION"
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null; then
+            echo "::error::Tag '$TAG' already exists on origin" >&2
+            exit 1
+          fi
+
+          BASE_VERSION="${VERSION%%-*}"
+          echo "project=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "assembly=${BASE_VERSION}.0" >> "$GITHUB_OUTPUT"
+          echo "prerelease=$([[ "$VERSION" == *-* ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          echo "Releasing $VERSION (assembly ${BASE_VERSION}.0)"
+
+      - name: Install dotnet-property
+        run: dotnet tool install --global dotnet-property
+
+      - name: Apply project version
+        shell: bash
+        env:
+          PROJECT_VERSION: ${{ steps.version.outputs.project }}
+          ASSEMBLY_VERSION: ${{ steps.version.outputs.assembly }}
+        run: |
+          # dotnet-property matches a relative glob, so run it from the project's own
+          # directory with a bare filename.
+          ( cd src/MoneyCalendar.App && \
+            dotnet-property MoneyCalendar.App.csproj "Version:$PROJECT_VERSION" && \
+            dotnet-property MoneyCalendar.App.csproj "AssemblyVersion:$ASSEMBLY_VERSION" && \
+            dotnet-property MoneyCalendar.App.csproj "FileVersion:$ASSEMBLY_VERSION" )
+
+      - name: Test
+        run: dotnet test MoneyCalendar.slnx --configuration Release --verbosity normal
+
+      # Self-contained so end users do not need the .NET runtime installed. Untrimmed:
+      # Avalonia resolves views and converters reflectively, and trimming breaks that.
+      - name: Publish
+        run: >
+          dotnet publish src/MoneyCalendar.App/MoneyCalendar.App.csproj
+          --configuration Release
+          --runtime ${{ env.RID }}
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          --output ${{ env.PUBLISH_DIR }}
+
+      - name: Strip debug symbols
+        shell: bash
+        run: find "${{ env.PUBLISH_DIR }}" -name '*.pdb' -delete
+
+      - name: Package portable zip
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path artifacts | Out-Null
+          Compress-Archive -Path "${{ env.PUBLISH_DIR }}/*" `
+            -DestinationPath "artifacts/MoneyCalendar-${{ steps.version.outputs.project }}-${{ env.RID }}-portable.zip"
+
+      - name: Commit and tag version
+        shell: bash
+        env:
+          PROJECT_VERSION: ${{ steps.version.outputs.project }}
+          TARGET_BRANCH: ${{ github.ref_name }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/MoneyCalendar.App/MoneyCalendar.App.csproj
+
+          if git diff --cached --quiet; then
+            echo "::error::Version update did not change the project file" >&2
+            exit 1
+          fi
+
+          git commit -m "Set version $PROJECT_VERSION"
+          git tag "v$PROJECT_VERSION"
+          git push --atomic origin "HEAD:$TARGET_BRANCH" "refs/tags/v$PROJECT_VERSION"
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: v${{ steps.version.outputs.project }}
+          name: Money Calendar v${{ steps.version.outputs.project }}
+          prerelease: ${{ steps.version.outputs.prerelease }}
+          generate_release_notes: true
+          files: |
+            artifacts/MoneyCalendar-${{ steps.version.outputs.project }}-${{ env.RID }}-portable.zip

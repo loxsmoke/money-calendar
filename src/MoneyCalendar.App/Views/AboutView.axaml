@@ -30,6 +30,31 @@
                 </StackPanel>
             </Border>
 
+            <!-- Updates -->
+            <Border Classes="card">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Updates" Classes="h2"/>
+                    <TextBlock Classes="subtle small" TextWrapping="Wrap"
+                               Text="Asks GitHub for the latest release. It is the only request the app makes, and nothing about you or your ledger goes with it."/>
+
+                    <CheckBox Content="Check for updates" IsChecked="{Binding CheckForUpdates}"/>
+
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Content="Check now" Click="OnCheckForUpdates"
+                                IsEnabled="{Binding !UpdateBusy}"/>
+                        <Button Content="Download" Classes="accent" Click="OnDownloadUpdate"
+                                IsVisible="{Binding DownloadUrl, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                        <Button Content="Release notes" Click="OnViewRelease"
+                                IsVisible="{Binding UpdateAvailable}"/>
+                    </StackPanel>
+
+                    <TextBlock Text="{Binding UpdateStatusText}" TextWrapping="Wrap"
+                               Classes="income small"
+                               Classes.subtle="{Binding !UpdateAvailable}"
+                               IsVisible="{Binding UpdateStatusText, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                </StackPanel>
+            </Border>
+
             <!-- System info -->
             <Border Classes="card">
                 <StackPanel Spacing="10">

@@ -28,6 +28,7 @@ Everything stays on your machine. There is no bank to connect, no account to sig
 - **Backup and export** — a JSON backup that restores everything, or a flat CSV for spreadsheets
 - **Light and dark themes**
 - **Your data, your disk** — a single local file you can copy, back up or delete
+- **Tells you when there is a new version** — an opt-out check against GitHub releases, and the only request the app makes
 
 ---
 
@@ -68,7 +69,7 @@ The first launch opens on an empty ledger — no invented accounts, no invented 
 
 **Settings** — the theme, your categories, a count of what the app is holding, and export and import. Two delete buttons live here, both red and both asking you to type the word first: one clears the transactions, the other clears the accounts too.
 
-**About** — which build is running, links to this repository, and a system-info table with a copy button for filing bug reports.
+**About** — which build is running, links to this repository, a check for newer releases (switch it off and the app makes no network requests at all), and a system-info table with a copy button for filing bug reports.
 
 ---
 
@@ -118,6 +119,18 @@ These are deliberate simplifications, not oversights:
 - **Currency is fixed to USD.** The setting exists internally but has no UI yet.
 - **Amounts are always positive** — each entry carries its direction separately, which suits typed-in rows better than a signed convention.
 - `SQLitePCLRaw.lib.e_sqlite3` reports the known NU1903 advisory; it is not treated as an error here.
+
+---
+
+## Releasing
+
+`.github/workflows/ci.yml` builds and tests every push and pull request against `main`.
+
+`.github/workflows/release.yml` is manual — run it from the Actions tab with a version like
+`1.2.0` (or `1.2.0-rc1` for a pre-release). It stamps the version into the project, runs the
+tests, publishes a self-contained single-file build for `win-x64`, and only then commits the
+bump, tags it and publishes a GitHub Release with the portable zip attached. A failed build
+leaves no version bump or tag behind.
 
 ---
 

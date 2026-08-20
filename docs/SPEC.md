@@ -19,7 +19,7 @@ calculation it performs. It is the reference for the implementation in `src/`; t
 7. [Import and export](#7-import-and-export)
 8. [Validation rules](#8-validation-rules)
 9. [Destructive operations](#9-destructive-operations)
-10. [Files and settings](#10-files-and-settings) — multiple databases, locations
+10. [Files and settings](#10-files-and-settings) — multiple databases, locations, updates, CI
 11. [Testing](#11-testing)
 12. [Known limitations](#12-known-limitations)
 
@@ -35,7 +35,8 @@ has moved, and the app projects the running balance forward across the range bei
 range summaries with a chart, JSON/CSV import and export, local storage.
 
 **Out of scope, deliberately:** bank or provider integration, multi-user or sync, multi-currency,
-budgets and goals, reconciliation against statements, attachments, encryption at rest.
+budgets and goals, reconciliation against statements, attachments, encryption at rest. The one
+network call in the app is an opt-out check for a newer release (§10.3); no telemetry, ever.
 
 ---
 
@@ -690,9 +691,52 @@ starting.
 code lands in `~/.config` or `~/Library/Application Support` on other platforms.
 
 `AppSettings` holds only preferences — `CurrencyCode` (default `USD`), `Theme` (`Default`, `Light`
-or `Dark`, where `Default` follows the OS) and `DatabaseName` (which database to open, §10.1).
-**No financial data is ever written to settings.** An unreadable settings file is logged and replaced with defaults rather than blocking
+or `Dark`, where `Default` follows the OS), `DatabaseName` (which database to open, §10.1) and
+`CheckForUpdates` (§10.3). **No financial data is ever written to settings.** An unreadable settings file is logged and replaced with defaults rather than blocking
 startup.
+
+---
+
+### 10.3 Update check
+
+The About section asks GitHub for the latest release. It is the **only outbound request the app
+ever makes**, it carries nothing about the machine or the ledger, and
+`AppSettings.CheckForUpdates` turns it off entirely.
+
+- `UpdateCheck` is the pure half: `ParseTag` reads a release tag as a version — a leading `v` is
+  allowed and any `-rc1`/`+sha` suffix is dropped — and `IsNewer` compares it against the running
+  build. Both **normalise to three parts**, because assembly versions carry a fourth (revision)
+  that a tag never names, and `0.1.0.0` must not read as newer than `v0.1.0`.
+- `UpdateService.CheckAsync` GETs `Brand.LatestReleaseApiUrl`, returns `null` unless the tag is
+  newer, and otherwise reports the version, publish date, and the portable zip's URL and size.
+  Every failure — offline, rate-limited, malformed — returns `null` and is logged at debug. An app
+  that cannot reach GitHub is not a broken app.
+- The asset it looks for is `UpdateCheck.PortableAssetName(version)`, which has to match the name
+  the release workflow attaches. A test pins the string on the app's side.
+- About checks quietly on arrival (saying nothing unless there is something newer) and **Check
+  now** announces either way. Nothing is downloaded or installed: **Download** opens the zip's URL
+  in a browser, because a portable release is something the user unpacks where they want it.
+
+### 10.4 CI and releases
+
+| Workflow | Trigger | Does |
+|---|---|---|
+| `.github/workflows/ci.yml` | Push and PR against `main` | Restore, build and test in Release on `windows-latest` |
+| `.github/workflows/release.yml` | `workflow_dispatch` with a `version` input | Stamps the version, tests, publishes, tags and releases |
+
+The release job validates the version (three numeric parts, optional pre-release suffix) and
+refuses a tag that already exists on the remote **before** building. It then stamps `Version`,
+`AssemblyVersion` and `FileVersion` into `MoneyCalendar.App.csproj` with `dotnet-property`, runs
+the tests against the stamped build, and publishes self-contained single-file for `win-x64`.
+Untrimmed, deliberately: Avalonia resolves views and converters reflectively.
+
+The commit, the tag and the GitHub Release happen **only after the build succeeds**, so a failed
+release leaves no version bump behind. A version with a pre-release suffix is marked as a
+pre-release on GitHub. The one attached asset is
+`MoneyCalendar-<version>-win-x64-portable.zip` — the name the update check looks for (§10.3).
+
+Windows runners for both: the app is a `WinExe` with a Windows application manifest, and the
+headless UI tests render through SkiaSharp against the same stack users run.
 
 ---
 
@@ -715,6 +759,7 @@ startup.
 | `Ui/DeleteAllDataTests` | Both delete buttons: styling, order, the two dialog wordings, what each actually removes |
 | `Ui/ListSortingTests`, `Ui/DateFieldTests` | Sorting by value rather than rendered text; date entry |
 | `Ui/WindowTitleTests` | The title format and that the version in it is numeric |
+| `Services/UpdateCheckTests` | Tag parsing, what counts as newer, the assembly-revision case, the release asset name |
 
 The UI tests build the real DI graph through `AppHost.ConfigureServices` against a temporary
 database file, so they exercise production wiring rather than a parallel test-only composition.

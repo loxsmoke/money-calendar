@@ -25,6 +25,28 @@ public partial class AboutView : UserControl
             OpenUrl(vm.IssuesUrl);
     }
 
+    private async void OnCheckForUpdates(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is AboutViewModel vm)
+            await vm.CheckForUpdatesAsync(announceWhenCurrent: true);
+    }
+
+    /// <summary>
+    /// Opens the download in a browser rather than fetching it here: the release is a zip to
+    /// unpack where the user wants it, not something this app should be placing on disk.
+    /// </summary>
+    private void OnDownloadUpdate(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is AboutViewModel { DownloadUrl: { } url })
+            OpenUrl(url);
+    }
+
+    private void OnViewRelease(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is AboutViewModel vm)
+            OpenUrl(vm.ReleaseUrl);
+    }
+
     private async void OnCopy(object? sender, RoutedEventArgs e)
     {
         if (DataContext is not AboutViewModel vm || TopLevel.GetTopLevel(this)?.Clipboard is not { } clipboard)
