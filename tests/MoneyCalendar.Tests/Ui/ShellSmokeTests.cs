@@ -1147,7 +1147,9 @@ public class ShellSmokeTests(HeadlessSessionFixture fixture)
         await about.ReloadAsync();
 
         Assert.Equal("Money Calendar", about.AppName);
-        Assert.StartsWith("Version 0.1", about.VersionText, StringComparison.Ordinal);
+        // Not a literal version: the release workflow stamps the real one into the project
+        // before it runs the tests, so anything pinned here fails every release.
+        Assert.Matches(@"^Version \d+\.\d+\.\d+", about.VersionText);
         Assert.Contains("income and expenses", about.Description, StringComparison.OrdinalIgnoreCase);
         Assert.Equal("https://github.com/LoxSmoke/money-calendar", about.RepoUrl);
         Assert.Equal("https://github.com/LoxSmoke/money-calendar/issues", about.IssuesUrl);

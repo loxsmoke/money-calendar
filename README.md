@@ -46,8 +46,7 @@ The interface is built with Avalonia, so nothing about it is Windows-bound in pr
 ## Getting started
 
 ```
-run.cmd                    # build and launch (Debug)
-run.cmd -c Release
+dotnet run --project src/MoneyCalendar.App
 dotnet test MoneyCalendar.slnx
 ```
 
@@ -94,7 +93,6 @@ something you might regret. The app remembers which one you were on.
 ```
 money-calendar/
 ├── MoneyCalendar.slnx           Solution file
-├── run.cmd                      Build and launch
 ├── docs/SPEC.md                 Full specification: schema, calculations, formats
 ├── src/
 │   ├── MoneyCalendar.Core/      Entities, summary aggregation, export/import, seed data
@@ -126,11 +124,17 @@ These are deliberate simplifications, not oversights:
 
 `.github/workflows/ci.yml` builds and tests every push and pull request against `main`.
 
-`.github/workflows/release.yml` is manual — run it from the Actions tab with a version like
-`1.2.0` (or `1.2.0-rc1` for a pre-release). It stamps the version into the project, runs the
-tests, publishes a self-contained single-file build for `win-x64`, and only then commits the
-bump, tags it and publishes a GitHub Release with the portable zip attached. A failed build
-leaves no version bump or tag behind.
+`.github/workflows/release.yml` is manual — run it from the Actions tab. It takes two inputs:
+
+| Input | Default | Meaning |
+|---|---|---|
+| `increment` | `az` | How far to bump: `azz` = 1.0.0, `az` = 0.1.0, `a` = 0.0.1 |
+| `postfix` | — | `rc`, `beta`, … for a pre-release |
+
+The version itself comes from version.win, which needs the `VERSION_WIN_API_KEY` and
+`VERSION_WIN_PROJECT_ID` repo secrets. The number is computed with a dry run, stamped into the
+project, and only reserved for real once the build and tests pass — so a failed release never
+burns a version. The commit, tag and GitHub Release come last, with the portable zip attached.
 
 ---
 
